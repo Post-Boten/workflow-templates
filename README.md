@@ -1,4 +1,4 @@
 # workflow-templates
 Beispiel Workflows, die man direkt in n8n verwenden kann
 
-[Hier geht's zur Erklärung](https://loom.com)
+<a href="https://loom.com" target="_blank" rel="noopener noreferrer">Hier geht's zur Erklärung</a>
