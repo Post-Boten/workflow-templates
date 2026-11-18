@@ -1,0 +1,161 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        16,
+        -1808
+      ],
+      "id": "4e101262-080f-4846-877e-06f349b4ab42",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "UdkpKy1AaUoIHAaz",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "rene.heller@developerakademie.com",
+          "mode": "id"
+        },
+        "start": "={{ $json.output.start }}",
+        "end": "={{ $json.output.ende }}",
+        "additionalFields": {
+          "description": "=Automatisch erstellt aus der Mail „{{ $('Neue Termin-Mail').item.json.subject }}“",
+          "location": "={{ $json.output.ort }}",
+          "summary": "={{ $json.output.titel }}"
+        }
+      },
+      "id": "e090d239-7a9f-46f4-9bdb-1231fb44554a",
+      "name": "Termin im Kalender eintragen",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        304,
+        -2000
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "AcUXwaojL9mrurlX",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "=Heutiges Datum: {{ $now.toFormat('yyyy-MM-dd') }} ({{ $now.setLocale('de').toFormat('cccc') }})\n\nBetreff: {{ $json.subject }}\n\nMail:\n{{ $json.text }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "titel",
+              "description": "Kurzer, aussagekräftiger Titel für den Termin, z. B. 'Meeting mit Anna'",
+              "required": true
+            },
+            {
+              "name": "start",
+              "description": "Beginn des Termins im ISO-8601-Format, z. B. 2026-11-20T14:00:00. Relative Angaben wie 'nächsten Dienstag' anhand des heutigen Datums auflösen.",
+              "required": true
+            },
+            {
+              "name": "ende",
+              "description": "Ende des Termins im ISO-8601-Format. Wenn keine Dauer genannt ist: eine Stunde nach Beginn.",
+              "required": true
+            },
+            {
+              "name": "ort",
+              "description": "Ort oder Meeting-Link, falls genannt, sonst leer lassen"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b0155d79-f67b-4467-a4c1-1bb2f36d5133",
+      "name": "KI liest Termin aus",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1,
+      "position": [
+        16,
+        -2000
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "subject:Termin is:unread"
+        },
+        "options": {}
+      },
+      "id": "29c55619-fa05-418a-b1c0-83c00627221a",
+      "name": "Neue Termin-Mail",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -224,
+        -2000
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "sL6OeyqbxGg7UhWj",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "KI liest Termin aus",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KI liest Termin aus": {
+      "main": [
+        [
+          {
+            "node": "Termin im Kalender eintragen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neue Termin-Mail": {
+      "main": [
+        [
+          {
+            "node": "KI liest Termin aus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ef822a970052fe4a649b9ca6c5cab9792d70825650e00ca6f9b19c683e4369a9"
+  }
+}

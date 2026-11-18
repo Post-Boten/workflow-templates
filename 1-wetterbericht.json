@@ -1,0 +1,54 @@
+{
+  "name": "Täglicher Wetterbericht per E-Mail",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "days", "triggerAtHour": 7, "triggerAtMinute": 0 }
+          ]
+        }
+      },
+      "id": "b1000000-0001-4000-8000-000000000001",
+      "name": "Jeden Morgen um 7 Uhr",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&timezone=Europe%2FBerlin&forecast_days=1",
+        "options": {}
+      },
+      "id": "b1000000-0002-4000-8000-000000000002",
+      "name": "Wetter abrufen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "sendTo": "deine@adresse.de",
+        "subject": "=☀️ Dein Wetter für heute, {{ $now.toFormat('dd.MM.') }}",
+        "emailType": "text",
+        "message": "=Guten Morgen!\n\nSo wird das Wetter heute in Berlin:\n\n🌡️ Temperatur: {{ $json.daily.temperature_2m_min[0] }} bis {{ $json.daily.temperature_2m_max[0] }} °C\n🌧️ Regenwahrscheinlichkeit: {{ $json.daily.precipitation_probability_max[0] }} %\n💨 Wind: bis {{ $json.daily.wind_speed_10m_max[0] }} km/h\n\n{{ $json.daily.precipitation_probability_max[0] > 50 ? '☂️ Nimm heute besser einen Schirm mit!' : '😎 Kein Schirm nötig.' }}\n\nSchönen Tag!",
+        "options": { "appendAttribution": false }
+      },
+      "id": "b1000000-0003-4000-8000-000000000003",
+      "name": "Wetterbericht mailen",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [480, 0]
+    }
+  ],
+  "connections": {
+    "Jeden Morgen um 7 Uhr": {
+      "main": [[{ "node": "Wetter abrufen", "type": "main", "index": 0 }]]
+    },
+    "Wetter abrufen": {
+      "main": [[{ "node": "Wetterbericht mailen", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1", "timezone": "Europe/Berlin" },
+  "pinData": {}
+}

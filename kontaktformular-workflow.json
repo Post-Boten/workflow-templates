@@ -1,0 +1,237 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1664,
+        -704
+      ],
+      "id": "548f1121-2437-4e94-a879-1d1e9b0df2a2",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "UdkpKy1AaUoIHAaz",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Kontaktformular').item.json['E-Mail'] }}",
+        "subject": "Danke für deine Nachricht!",
+        "emailType": "text",
+        "message": "=Hallo {{ $('Kontaktformular').item.json.Name }},\n\nvielen Dank für deine Nachricht! Wir haben sie erhalten und melden uns in Kürze bei dir.\n\nViele Grüße\nDein Team",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "5a67dfbc-855a-4116-87d1-65a11eb28a7d",
+      "name": "Antwort-Mail senden",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2160,
+        -864
+      ],
+      "webhookId": "8fa4afeb-c23e-4b3f-b834-0de3a4ace9ff",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "sL6OeyqbxGg7UhWj",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "=",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Kunden"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Datum": "={{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
+            "Name": "={{ $('Kontaktformular').item.json.Name }}",
+            "E-Mail": "={{ $('Kontaktformular').item.json['E-Mail'] }}",
+            "Nachricht": "={{ $('Kontaktformular').item.json.Nachricht }}",
+            "KI-Einordnung": "={{ $json.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Datum",
+              "displayName": "Datum",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "E-Mail",
+              "displayName": "E-Mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nachricht",
+              "displayName": "Nachricht",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "KI-Einordnung",
+              "displayName": "KI-Einordnung",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "74e672fb-9f2a-4eb7-95fe-5c6f12acbe21",
+      "name": "In Kundenliste eintragen",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1968,
+        -864
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Xyfbn3bV9nucY2BF",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Fasse die folgende Kontaktanfrage in einem Satz zusammen und ordne sie genau einer Kategorie zu (Kursanfrage, Support, Kooperation, Sonstiges).\n\nAntworte exakt in diesem Format:\nKategorie: <Kategorie>\nZusammenfassung: <ein Satz>\n\nAnfrage:\n{{ $json.Nachricht }}"
+      },
+      "id": "73d55313-718b-4c4d-896c-011b5575c665",
+      "name": "KI: Zusammenfassen & einordnen",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        1664,
+        -864
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Kontakt",
+        "formDescription": "Schreib uns – wir melden uns schnellstmöglich.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "E-Mail",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Nachricht",
+              "fieldType": "textarea",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e4c3e4ff-b566-4dc7-9165-32ef08380868",
+      "name": "Kontaktformular",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        1472,
+        -864
+      ],
+      "webhookId": "d87348cb-ed29-48de-8fa6-c7c02d157aa1"
+    }
+  ],
+  "connections": {
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "KI: Zusammenfassen & einordnen",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "In Kundenliste eintragen": {
+      "main": [
+        [
+          {
+            "node": "Antwort-Mail senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KI: Zusammenfassen & einordnen": {
+      "main": [
+        [
+          {
+            "node": "In Kundenliste eintragen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kontaktformular": {
+      "main": [
+        [
+          {
+            "node": "KI: Zusammenfassen & einordnen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ef822a970052fe4a649b9ca6c5cab9792d70825650e00ca6f9b19c683e4369a9"
+  }
+}

@@ -1,0 +1,305 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        -864
+      ],
+      "id": "97f9e57d-d922-41fb-aebc-ace73de0d871",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "UdkpKy1AaUoIHAaz",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "=https://docs.google.com/document/d/1pv_mde5jByLimJhuZlefrkCZ5aj3Kpihk-gDNAzn-90/edit?tab=t.0",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "=\n\n━━━━━━━━━━━━━━━━━━━━\n\n{{ $json.text }}\n\n🔗 Quelle: {{ ($('Neue Rezept-Mail').item.json.text || '').match(/https?:\\/\\/\\S+/)?.[0] || 'Screenshot' }}\n📅 Gespeichert am {{ $now.toFormat('dd.MM.yyyy') }}"
+            }
+          ]
+        }
+      },
+      "id": "72a890d8-a31d-473d-b7ad-3623753ab02f",
+      "name": "Ins Kochbuch schreiben",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        976,
+        -880
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "4bWg2LnpWn36LJLe",
+          "name": "Google Docs account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Hier ist der Text einer Webseite mit einem Rezept. Schreib das Rezept sauber auf Deutsch ab, exakt in diesem Format und ohne weitere Kommentare:\n\n🍽️ <Name des Rezepts>\n👥 Portionen: <Anzahl> | ⏱️ Zeit: <Dauer>\n\nZutaten:\n- <Menge> <Zutat>\n\nZubereitung:\n1. <Schritt>\n\nFehlende Angaben weglassen, nichts erfinden. Werbung, Kommentare und Navigation ignorieren.\n\nWebseite:\n{{ $json.seite.slice(0, 15000) }}"
+      },
+      "id": "145af1f4-79a6-4631-b493-0c593a604bb6",
+      "name": "KI liest Webseite",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        720,
+        -720
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "seite",
+              "cssSelector": "body"
+            }
+          ]
+        },
+        "options": {
+          "trimValues": true,
+          "cleanUpText": true
+        }
+      },
+      "id": "a07a0312-317a-45f2-9307-8031d904a7d9",
+      "name": "Text auslesen",
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        -720
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.text.match(/https?:\\/\\/\\S+/)[0] }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "c59dd389-ee40-4acc-8b8e-6bc51427f74f",
+      "name": "Webseite laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        -720
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Auf dem Bild ist ein Rezept. Schreib es sauber auf Deutsch ab, exakt in diesem Format und ohne weitere Kommentare:\n\n🍽️ <Name des Rezepts>\n👥 Portionen: <Anzahl> | ⏱️ Zeit: <Dauer>\n\nZutaten:\n- <Menge> <Zutat>\n\nZubereitung:\n1. <Schritt>\n\nFehlende Angaben weglassen, nichts erfinden.",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "messageType": "imageBinary",
+              "binaryImageDataKey": "attachment_0"
+            }
+          ]
+        }
+      },
+      "id": "f715dab6-30d7-4778-9b6f-13f3bb796ecc",
+      "name": "KI liest Screenshot",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        240,
+        -1040
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "b6000000-c001-4000-8000-000000000001",
+              "leftValue": "={{ !!$binary.attachment_0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6a3cc1c0-2e58-4f0e-8462-a75db9353020",
+      "name": "Screenshot dabei?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        -880
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "subject:Rezept is:unread"
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "id": "a543693e-62fb-4c93-9847-656cbda371e7",
+      "name": "Neue Rezept-Mail",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -288,
+        -880
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "sL6OeyqbxGg7UhWj",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "KI liest Webseite",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "KI liest Screenshot",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KI liest Webseite": {
+      "main": [
+        [
+          {
+            "node": "Ins Kochbuch schreiben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text auslesen": {
+      "main": [
+        [
+          {
+            "node": "KI liest Webseite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webseite laden": {
+      "main": [
+        [
+          {
+            "node": "Text auslesen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KI liest Screenshot": {
+      "main": [
+        [
+          {
+            "node": "Ins Kochbuch schreiben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Screenshot dabei?": {
+      "main": [
+        [
+          {
+            "node": "KI liest Screenshot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Webseite laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neue Rezept-Mail": {
+      "main": [
+        [
+          {
+            "node": "Screenshot dabei?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ef822a970052fe4a649b9ca6c5cab9792d70825650e00ca6f9b19c683e4369a9"
+  }
+}
